@@ -44,7 +44,7 @@ class Play extends Phaser.Scene{
         layer3 = map.createLayer('Layer3', lay3container);
         this.matter.add.gameObject([layer2,layer3], {isStatic: true});
 
-        this.bus = this.matter.add.sprite(400, 355, 'bus_key', 2) // * 330, 210 | 150, 355
+        this.bus = this.matter.add.sprite(400, 355, 'bus_key', 2) 
         this.bus.setVelocity(0,0);
         this.bus.setIgnoreGravity(true);
         // this.matter.world.setGravity(1,0)
@@ -55,50 +55,53 @@ class Play extends Phaser.Scene{
         this.bus.setOrigin(0.5, 0.5);
         // bus.restitution(1)
         this.bus.setAngle(-90);
-        this.bus.setAngularVelocity(0.0);
         this.bus.setFrictionAir(0.1);
         this.bus.setMass(100);
 
-        this.tracker1 = this.add.rectangle(0,0,4,4,0x00ff00);
+        //here we create the "turning points" on the bus
+        this.tracker1 = this.add.rectangle(0,0,4,4,0x00ff00);  
         this.tracker2 = this.add.rectangle(0,0,4,4,0xff0000);
         this.cursors = this.input.keyboard.createCursorKeys();
-
-        
-
     }
 
     update(){
-        
+        //here we store the top right and bottom right points of our bus sprite
         let point1 = this.bus.getTopRight()
         let point2 = this.bus.getBottomRight();
 
+        //here the trackers 
         this.tracker1.setPosition(point1.x, point1.y);
         this.tracker2.setPosition(point2.x, point2.y);
 
         if (this.cursors.up.isDown) {
-            this.bus.thrust(0.025);
+            this.bus.thrust(0.1);
         }
         else if (this.cursors.down.isDown){
-            this.bus.thrustBack(0.1);
+            this.bus.thrustBack(0.025);
         }
 
         let speed = 0.025;
 
-    if (this.cursors.left.isDown)
-    {
-        this.bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: -speed * Math.cos(this.bus.body.angle), y: 0 });
-
-         Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.bus.body, -0.01);
-         //this.bus.angle -= 4;
-    }
-    if (this.cursors.right.isDown)
-    {
-        this.bus.applyForceFrom({ x: point2.x, y: point2.y }, { x: speed * Math.cos(this.bus.body.angle), y: 0 });
-
-        // car.applyForceFrom();
-         Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.bus.body, 0.01);
-         //this.bus.angle += 4;
-    }
+        if (this.cursors.left.isDown) {
+            this.bus.setFrame(3);
+            if ((this.cursors.up.isDown || this.cursors.down.isDown) || this.bus.velocity > 0) {
+            this.bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: -speed * Math.cos(this.bus.body.angle), y: 0 });
+            Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.bus.body, -0.01);
+            //this.bus.angle -= 0.01;
+            }
+        }
+        else if (this.cursors.right.isDown) {
+            this.bus.setFrame(1);
+            if ((this.cursors.up.isDown || this.cursors.down.isDown) || this.bus.velocity > 0) {
+                this.bus.applyForceFrom({ x: point2.x, y: point2.y }, { x: speed * Math.cos(this.bus.body.angle), y: 0 });
+                Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.bus.body, 0.01);
+                //this.bus.angle += 0.01;
+            }
+            
+        }
+        else {
+            this.bus.setFrame(2)
+        }
 
 
     }

@@ -3,6 +3,7 @@ let bus;
 let tracker1;
 let tracker2;
 let cursors;
+
 class Play extends Phaser.Scene{
 
     constructor(){
@@ -12,9 +13,6 @@ class Play extends Phaser.Scene{
     }
 
     create(){
-        let tracker1;
-        let tracker2;
-        let cursors;
         let map;
         let tileset1;
         let tileset2;
@@ -26,7 +24,6 @@ class Play extends Phaser.Scene{
         let layer1;
         let layer2;
         let layer3;
-        //let bus;
 
         this.matter.world.setBounds(0, 0, 800, 800, 0.5);
         map = this.add.tilemap('map');
@@ -55,54 +52,58 @@ class Play extends Phaser.Scene{
         this.bus.setOrigin(0.5, 0.5);
         // bus.restitution(1)
         this.bus.setAngle(-90);
-        this.bus.setFrictionAir(0.1);
-        this.bus.setMass(100);
+        this.bus.setFrictionAir(0.3);
+        this.bus.setMass(150);
 
-        //here we create the "turning points" on the bus
+        // ? here we create the "turning points" on the bus
         this.tracker1 = this.add.rectangle(0,0,4,4,0x00ff00);  
         this.tracker2 = this.add.rectangle(0,0,4,4,0xff0000);
         this.cursors = this.input.keyboard.createCursorKeys();
     }
 
     update(){
-        //here we store the top right and bottom right points of our bus sprite
-        let point1 = this.bus.getTopRight()
-        let point2 = this.bus.getBottomRight();
+        // ? here we store the top right and bottom right points of our bus sprite
+        let point1 = this.bus.getTopRight() // ! green
+        let point2 = this.bus.getBottomRight(); // ! red
 
-        //here the trackers 
+        // ? here the trackers are following the points
         this.tracker1.setPosition(point1.x, point1.y);
         this.tracker2.setPosition(point2.x, point2.y);
 
+        let speed = 0.08; // ? the speed at which the bus is turning (+ 0.01 AngularVelocity)
         if (this.cursors.up.isDown) {
             this.bus.thrust(0.1);
         }
-        else if (this.cursors.down.isDown){
-            this.bus.thrustBack(0.025);
+        else if (this.cursors.down.isDown) {
+            this.bus.thrustBack(0.1);
         }
 
-        let speed = 0.025;
-
         if (this.cursors.left.isDown) {
-            this.bus.setFrame(3);
-            if ((this.cursors.up.isDown || this.cursors.down.isDown) || this.bus.velocity > 0) {
-            this.bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: -speed * Math.cos(this.bus.body.angle), y: 0 });
-            Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.bus.body, -0.01);
-            //this.bus.angle -= 0.01;
+            this.bus.setFrame(0); // ? one of the wheel position
+            if (this.cursors.up.isDown) { // ? the bus will turn only when the up arrow button is pressed
+                this.bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: -speed * Math.cos(this.bus.body.angle), y: 0 });
+                Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.bus.body, -0.01);
+            }
+            else if (this.cursors.down.isDown) { // ? here we correct the wheel position, so that it coresponds to the backward movement
+                this.bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: speed * Math.cos(this.bus.body.angle), y: 0 });
+                Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.bus.body, 0.01);
             }
         }
         else if (this.cursors.right.isDown) {
             this.bus.setFrame(1);
-            if ((this.cursors.up.isDown || this.cursors.down.isDown) || this.bus.velocity > 0) {
+            if (this.cursors.up.isDown) {
                 this.bus.applyForceFrom({ x: point2.x, y: point2.y }, { x: speed * Math.cos(this.bus.body.angle), y: 0 });
                 Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.bus.body, 0.01);
-                //this.bus.angle += 0.01;
+            }
+            else if (this.cursors.down.isDown) { // ? here we do the same things as above...
+                this.bus.applyForceFrom({ x: point2.x, y: point2.y }, { x: -speed * Math.cos(this.bus.body.angle), y: 0 });
+                Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.bus.body, -0.01);
             }
             
         }
         else {
-            this.bus.setFrame(2)
+            this.bus.setFrame(2) // ? this frame stands for the default wheel position
         }
-
 
     }
 }

@@ -1,12 +1,12 @@
 'use strict'
-class Boot extends Phaser.Scene{
-    constructor(){
+class Boot extends Phaser.Scene {
+    constructor() {
         super({
             key: "boot"
         });
     }
 
-    preload(){
+    preload() {
         this.load.tilemapTiledJSON('map', './tilemap/testmap_1.json')
         this.load.image('lab', './tilemap/tilesets/32x32_tileset_laboratory.png')
         this.load.image('setofcars', './tilemap/tilesets/25981646_04.png')
@@ -14,10 +14,10 @@ class Boot extends Phaser.Scene{
         this.load.image('objects_01', './tilemap/tilesets/objectspack_01.jpg')
         this.load.spritesheet('bus_key', './images/bus_sprite.png', { frameWidth: 336, frameHeight: 76 })
     }
-    create(){
+    create() {
         this.scene.start('play');
     }
-    update(){
-        
+    update() {
+
     }
 }

@@ -1,27 +1,18 @@
-"use strict";
-
+"use strict"
 let config = {
     type: Phaser.AUTO,
     width: 800,
     height: 800,
-        physics: {
+    physics: {
         default: "matter",
-            matter: {
-                debug: {
-                    
-                    showBounds: true,
-                    showAxes: true
-                }
-            }
-        },
-        extend: {
-            bus: null,
-            reticle: null,
-            moveKeys: null,
-            bullets: null,
-            lastFired: 0,
-            time: 0,
-        },
+        matter: {
+            // debug: {
+            //     angleColor: 1,
+            //     showBounds: true,
+            //     showAxes: true
+            // }
+        }
+    },
     scene: [Boot, Play] //! Първо ще зареди "Boot" сцената, а след това и "Play". 
 };
-let game = new Phaser.Game(config);
+const game = new Phaser.Game(config);

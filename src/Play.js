@@ -23,22 +23,24 @@ class Play extends Phaser.Scene {
         let layer2;
         let layer3;
 
+        //this.game.stage.backgroundColor = "#FF00FF"
+        this.cameras.main.setBackgroundColor("0x4D5455");
         this.matter.world.setBounds(0, 0, 800, 800, 0.5);
         map = this.add.tilemap('map');
-        tileset1 = map.addTilesetImage('laboratory', 'lab');
-        tileset2 = map.addTilesetImage('carpack_01', 'setofcars');
+        // tileset1 = map.addTilesetImage('laboratory', 'lab');
+        tileset2 = map.addTilesetImage('25981646_04', 'setofcars');
         // let tileset3 = map.addTilesetImage('deadcity','city');
-        tileset4 = map.addTilesetImage('Street_02', 'street');
-        tileset5 = map.addTilesetImage('objectspack_01', 'objects_01');
+        tileset4 = map.addTilesetImage('street_map', 'street');
+        // tileset5 = map.addTilesetImage('objectspack_01', 'objects_01');
 
-        layer1 = map.createLayer('Layer1', tileset4, 0, 0);
-        layer2 = map.createLayer('Layer2', [tileset2, tileset5]);
-        layer3 = map.createLayer('Layer3', [tileset1, tileset5]);
-        this.matter.add.gameObject([layer2, layer3], { isStatic: true });
+        layer1 = map.createLayer('Слой с плочки 1', tileset4, 0, 0);
+        layer2 = map.createLayer('Слой с плочки 2', tileset2, 0, 0);
+        // layer3 = map.createLayer('Layer3', [tileset1, tileset5]);
+        // this.matter.add.gameObject([layer2, layer3], { isStatic: true });
         ////[layer1,layer2,layer3].setCollisionGroup(group1);
         ////this.matter.addCollider(this.bus, layer2)
 
-        this.matter.world.convertTilemapLayer(layer1);
+        // this.matter.world.convertTilemapLayer(layer1);
 
         this.bus = this.matter.add.sprite(400, 355, 'bus_key', 2)
         this.bus.setCollisionGroup(group1);
@@ -52,7 +54,7 @@ class Play extends Phaser.Scene {
         this.bus.setOrigin(0.5, 0.5);
         // bus.restitution(1)
         this.bus.setAngle(0);
-        this.bus.setFrictionAir(0.25); //* 0.25
+        this.bus.setFrictionAir(0.1); //* 0.25
         this.bus.setFrictionStatic(0.0); //*0
         this.bus.setMass(90); //*90
 
@@ -68,7 +70,7 @@ class Play extends Phaser.Scene {
         let point2 = this.bus.getBottomRight(); // ! red
 
         //* 0.08
-        const turnSpeed = 0.04; // ? the speed at which the bus is turning
+        const turnSpeed = 0.03; // ? the speed at which the bus is turning
 
         if (this.cursors.up.isDown) {
             this.bus.thrust(0.1);//*0.15

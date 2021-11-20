@@ -1,8 +1,9 @@
 "use strict"
 let config = {
-    type: Phaser.AUTO,
+    type: Phaser.CANVAS,
     width: 800,
     height: 800,
+    pixelArt: false,
     physics: {
         default: "matter",
         matter: {

@@ -1,17 +1,17 @@
 "use strict"
 let config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 800,
+    width: 832,
+    height: 576,
     pixelArt: false,
     physics: {
         default: "matter",
         matter: {
-            debug: {
-                angleColor: 1,
-                showBounds: true,
-                showAxes: true
-            }
+            // debug: {
+            //     angleColor: 1,
+            //     showBounds: true,
+            //     showAxes: true
+            // }
         }
     },
     scene: [Boot, Play] //! Първо ще зареди "Boot" сцената, а след това и "Play". 

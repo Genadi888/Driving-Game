@@ -2,10 +2,13 @@
 // import 'phaser';
 // /** @type {import(../typings/phaser)}*/
 // /** @type {import(../typings/matter)}*/
-let bus: any;
+
+let bus: Phaser.Physics.Matter.Sprite;
 let cursors: any;
 let group1: number;
 let group2: any;
+let spawn: Phaser.GameObjects.Image;
+let busContainer: Phaser.GameObjects.Container;
 
 class Play extends Phaser.Scene {
 
@@ -16,28 +19,17 @@ class Play extends Phaser.Scene {
     }
 
     create() {
-        let map: Phaser.Tilemaps.Tilemap;
-        let tileset1: any;
-        let tileset2: any;
-        let tileset3: any;
-        let tileset4: any;
-        let tileset5: any;
-        let layer1: any;
-        let layer2: Phaser.Tilemaps.TilemapLayer;
-        let layer3: any;
-
-        //game.stage.backgroundColor = "#FF00FF"
         this.cameras.main.setBackgroundColor("0x4D5455");
         this.matter.world.setBounds(0, 0, 800, 800, 0.5);
-        map = this.add.tilemap('map');
+        const map: Phaser.Tilemaps.Tilemap = this.add.tilemap('map');
+        const tileset2: Phaser.Tilemaps.Tileset = map.addTilesetImage('objectspack_01', 'objects_key');
+        const tileset4: Phaser.Tilemaps.Tileset = map.addTilesetImage('cars_tileset', 'cars_set_key');
+        const layer1: Phaser.Tilemaps.TilemapLayer = map.createLayer('Background', tileset4, 0, 0);
+        const layer2: Phaser.Tilemaps.TilemapLayer = map.createLayer('Layer 1', [tileset2, tileset4], 0, 0);
         // tileset1 = map.addTilesetImage('laboratory', 'lab');
-        tileset2 = map.addTilesetImage('25981646_04', 'setofcars');
         // let tileset3 = map.addTilesetImage('deadcity','city');
-        tileset4 = map.addTilesetImage('street_map', 'street');
         // tileset5 = map.addTilesetImage('objectspack_01', 'objects_01');
 
-        layer1 = map.createLayer('Layer 1', tileset4, 0, 0);
-        layer2 = map.createLayer('Layer 2', tileset2, 0, 0);
         // layer3 = map.createLayer('Layer3', [tileset1, tileset5]);
 
         layer2.setCollisionByExclusion([-1]);
@@ -49,49 +41,89 @@ class Play extends Phaser.Scene {
         bus.setIgnoreGravity(true);
 
         // bus.setDisplaySize(10, 10) 
-        //bus.scale = 0.8;
-        bus.setScale(0.7, 0.8); //? x and y 
+        // bus.scale = 0.8;
+        bus.setScale(0.6, 0.8); //? x and y 
         bus.setOrigin(0.5, 0.5);
         // bus.restitution(1)
-        bus.setAngle(0);
+        bus.setAngle(0.1);
         bus.setFrictionAir(0.1); //* 0.25
-        bus.setFrictionStatic(0.0); //*0
-        bus.setMass(90); //*90
+        bus.setFrictionStatic(100); //*0
+        bus.setMass(170); //*90
+        bus.setDataEnabled();
+        bus.setData({
+            isStationary: true,
+        });
+
+        
+        spawn = this.add.sprite(80, -32, 'spawn');
+        spawn.setOrigin(0.5, 0.5);
+        spawn.setScale(0.1, 0.1)
+        // spawn.setVelocity(0, 0);
+        // spawn.setIgnoreGravity(true);
+        
+        busContainer = this.add.container(100, 100)
+        busContainer.add(spawn);
+        
+        // busContainer.add(bus);
 
         cursors = this.input.keyboard.createCursorKeys();
         group1 = this.matter.world.nextGroup();
     }
 
     update() {
+        busContainer.setX(bus.x);
+        busContainer.setY(bus.y);
+        busContainer.setAngle(bus.angle)
+
         // ? here we store the top right and bottom right points of our bus sprite
-        let point1: any = bus.getTopRight(); // ! green
-        let point2: any = bus.getBottomRight(); // ! red
+        const point1: any = bus.getTopRight(); // ! green
+        const point2: any = bus.getBottomRight(); // ! red
 
         //* 0.08
-        const turnSpeed = 0.03; // ? the speed at which the bus is turning
+        const turnSpeed = 0.08; // ? the speed at which the bus is turning
 
         if (cursors.up.isDown) {
-            bus.thrust(0.1);//*0.15
+            bus.thrust(0.15);//*0.15
+            bus.data.values.isStationary = false
         } else if (cursors.down.isDown) {
             bus.thrustBack(0.1);//*0.1
+            bus.data.values.isStationary = false
+        } else if (bus.data.values.isStationary = false) {
+            console.log(bus.data.values.isStationary)
+            setTimeout(() => {
+                bus.data.values.isStationary = true;
+                console.log('bus stopped');
+                bus.setVelocity(0,0);
+                bus.setAngularVelocity(0);
+            }, 2000)
         }
 
         if (cursors.left.isDown) {
             bus.setFrame(0); // ? one of the wheel position
+
             if (cursors.up.isDown) { // ? the bus will turn only when the up arrow button is pressed
-                let angle = bus.body.angle - Math.PI / 2;
+                // @ts-expect-errorz
+                const angle = bus.body.angle - Math.PI / 2;
+                // @ts-expect-error
                 bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
             } else if (cursors.down.isDown) { // ? here we correct the wheel position, so that it coresponds to the backward movement
-                let angle = bus.body.angle + Math.PI / 2;
+                // @ts-expect-error
+                const angle = bus.body.angle + Math.PI / 2;
+                // @ts-expect-error
                 bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
             }
         } else if (cursors.right.isDown) {
             bus.setFrame(1);
+            
             if (cursors.up.isDown) {
-                let angle = bus.body.angle + Math.PI / 2;
+                // @ts-expect-error
+                const angle = bus.body.angle + Math.PI / 2;
+                // @ts-expect-error
                 bus.applyForceFrom({ x: point2.x, y: point2.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
             } else if (cursors.down.isDown) { // ? here we do the same things as above...
-                let angle = bus.body.angle - Math.PI / 2;
+                // @ts-expect-error
+                const angle = bus.body.angle - Math.PI / 2;
+                // @ts-expect-error
                 bus.applyForceFrom({ x: point2.x, y: point2.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
             }
 

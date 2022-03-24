@@ -8,6 +8,11 @@ let group1;
 let group2;
 let spawn;
 let busContainer;
+let keyF;
+let keyFPressed = false;
+let player;
+let tempMatrix;
+let d;
 class Play extends Phaser.Scene {
     constructor() {
         super({
@@ -43,11 +48,13 @@ class Play extends Phaser.Scene {
         bus.setMass(170); //*90
         bus.setDataEnabled();
         bus.setData({
-            isStationary: true,
+            isStationary: false,
         });
-        spawn = this.add.sprite(80, -32, 'spawn');
+        spawn = this.add.sprite(73, -40, 'spawn');
         spawn.setOrigin(0.5, 0.5);
         spawn.setScale(0.1, 0.1);
+        spawn.alpha = 0;
+        tempMatrix = new Phaser.GameObjects.Components.TransformMatrix();
         // spawn.setVelocity(0, 0);
         // spawn.setIgnoreGravity(true);
         busContainer = this.add.container(100, 100);
@@ -55,6 +62,7 @@ class Play extends Phaser.Scene {
         // busContainer.add(bus);
         cursors = this.input.keyboard.createCursorKeys();
         group1 = this.matter.world.nextGroup();
+        keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     }
     update() {
         busContainer.setX(bus.x);
@@ -65,24 +73,14 @@ class Play extends Phaser.Scene {
         const point2 = bus.getBottomRight(); // ! red
         //* 0.08
         const turnSpeed = 0.08; // ? the speed at which the bus is turning
-        if (cursors.up.isDown) {
+        if (cursors.up.isDown && !keyFPressed) {
             bus.thrust(0.15); //*0.15
-            bus.data.values.isStationary = false;
+            // console.log('hi!')
         }
-        else if (cursors.down.isDown) {
+        else if (cursors.down.isDown && !keyFPressed) {
             bus.thrustBack(0.1); //*0.1
-            bus.data.values.isStationary = false;
         }
-        else if (bus.data.values.isStationary = false) {
-            console.log(bus.data.values.isStationary);
-            setTimeout(() => {
-                bus.data.values.isStationary = true;
-                console.log('bus stopped');
-                bus.setVelocity(0, 0);
-                bus.setAngularVelocity(0);
-            }, 2000);
-        }
-        if (cursors.left.isDown) {
+        if (cursors.left.isDown && !keyFPressed) {
             bus.setFrame(0); // ? one of the wheel position
             if (cursors.up.isDown) { // ? the bus will turn only when the up arrow button is pressed
                 // @ts-expect-errorz
@@ -97,7 +95,7 @@ class Play extends Phaser.Scene {
                 bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
             }
         }
-        else if (cursors.right.isDown) {
+        else if (cursors.right.isDown && !keyFPressed) {
             bus.setFrame(1);
             if (cursors.up.isDown) {
                 // @ts-expect-error
@@ -115,5 +113,26 @@ class Play extends Phaser.Scene {
         else {
             bus.setFrame(2); // ? frame stands for the default wheel position
         }
+        if (keyF.isDown && !keyFPressed) {
+            createPlayer.call(this);
+            keyFPressed = true;
+            // console.log('wtf')
+        }
+        if (bus.data.values.isStationary) {
+            bus.setVelocityX(0);
+            bus.setVelocityY(0);
+            bus.setAngularVelocity(0);
+        }
+        // console.log(spawn.parentContainer.x)
+        spawn.getWorldTransformMatrix(tempMatrix);
+        d = tempMatrix.decomposeMatrix();
+        // console.log(d.translateX);
     }
+}
+function createPlayer() {
+    bus.data.values.isStationary = true;
+    player = this.add.sprite(d.translateX, d.translateY, 'guy');
+    player.setOrigin(0.5, 0.5);
+    player.setScale(0.35, 0.35);
+    player.setRotation(bus.rotation);
 }

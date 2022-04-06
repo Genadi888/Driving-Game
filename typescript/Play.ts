@@ -4,7 +4,7 @@
 // /** @type {import(../typings/matter)}*/
 
 let bus: Phaser.Physics.Matter.Sprite;
-let cursors: any;
+let cursors: Phaser.Types.Input.Keyboard.CursorKeys;
 let group1: number;
 let group2: any;
 let spawn: Phaser.GameObjects.Image;
@@ -16,7 +16,7 @@ let tempMatrix: Phaser.GameObjects.Components.TransformMatrix;
 let d: object;
 
 class Play extends Phaser.Scene {
-    
+
     constructor() {
         super({
             key: "play"
@@ -59,7 +59,7 @@ class Play extends Phaser.Scene {
             isStationary: false,
         });
 
-        
+
         spawn = this.add.sprite(73, -40, 'spawn');
         spawn.setOrigin(0.5, 0.5);
         spawn.setScale(0.1, 0.1)
@@ -69,15 +69,19 @@ class Play extends Phaser.Scene {
 
         // spawn.setVelocity(0, 0);
         // spawn.setIgnoreGravity(true);
-        
+
         busContainer = this.add.container(100, 100)
         busContainer.add(spawn);
-        
+
         // busContainer.add(bus);
 
         cursors = this.input.keyboard.createCursorKeys();
         group1 = this.matter.world.nextGroup();
         keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+
+        this.input.on('pointermove', mouseRotate, this);
+
+        // this.anims.gen
     }
 
     update() {
@@ -85,64 +89,8 @@ class Play extends Phaser.Scene {
         busContainer.setY(bus.y);
         busContainer.setAngle(bus.angle)
 
-        // ? here we store the top right and bottom right points of our bus sprite
-        const point1: any = bus.getTopRight(); // ! green
-        const point2: any = bus.getBottomRight(); // ! red
-
-        //* 0.08
-        const turnSpeed = 0.08; // ? the speed at which the bus is turning
-
-        if (cursors.up.isDown && !keyFPressed) {
-            bus.thrust(0.15);//*0.15
-            // console.log('hi!')
-        } else if (cursors.down.isDown && !keyFPressed) {
-            bus.thrustBack(0.1);//*0.1
-        }
-
-        if (cursors.left.isDown && !keyFPressed) {
-            bus.setFrame(0); // ? one of the wheel position
-
-            if (cursors.up.isDown) { // ? the bus will turn only when the up arrow button is pressed
-                // @ts-expect-errorz
-                const angle = bus.body.angle - Math.PI / 2;
-                // @ts-expect-error
-                bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
-            } else if (cursors.down.isDown) { // ? here we correct the wheel position, so that it coresponds to the backward movement
-                // @ts-expect-error
-                const angle = bus.body.angle + Math.PI / 2;
-                // @ts-expect-error
-                bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
-            }
-        } else if (cursors.right.isDown && !keyFPressed) {
-            bus.setFrame(1);
-            
-            if (cursors.up.isDown) {
-                // @ts-expect-error
-                const angle = bus.body.angle + Math.PI / 2;
-                // @ts-expect-error
-                bus.applyForceFrom({ x: point2.x, y: point2.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
-            } else if (cursors.down.isDown) { // ? here we do the same things as above...
-                // @ts-expect-error
-                const angle = bus.body.angle - Math.PI / 2;
-                // @ts-expect-error
-                bus.applyForceFrom({ x: point2.x, y: point2.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
-            }
-
-        } else {
-            bus.setFrame(2) // ? frame stands for the default wheel position
-        }
-
-        if (keyF.isDown && !keyFPressed) {
-            createPlayer.call(this);
-            keyFPressed = true;
-            // console.log('wtf')
-        }
-
-        if (bus.data.values.isStationary) {
-            bus.setVelocityX(0);
-            bus.setVelocityY(0);
-            bus.setAngularVelocity(0);
-        }
+        busMovement.call(this);
+        playerMovement.call(this);
 
         // console.log(spawn.parentContainer.x)
         spawn.getWorldTransformMatrix(tempMatrix);
@@ -152,11 +100,110 @@ class Play extends Phaser.Scene {
 
 }
 
+function mouseRotate(pointer: Phaser.Input.Pointer) {
+    if (keyFPressed) {
+        const angle = Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(player.x, player.y, pointer.x, pointer.y);
+        player.setAngle(angle);
+    }
+}
+
 function createPlayer(this: any) {
     bus.data.values.isStationary = true;
+    // bus.setToSleep();
 
-    player = this.add.sprite(d.translateX, d.translateY, 'guy');
+    //@ts-expect-error
+    player = this.matter.add.sprite(d.translateX, d.translateY, 'guy');
+
+    const sprite_body = this.matter.bodies.rectangle(player.x, player.y, 20, 20)
+    player.setExistingBody(sprite_body);
+
     player.setOrigin(0.5, 0.5);
     player.setScale(0.35, 0.35);
     player.setRotation(bus.rotation);
+    player.setIgnoreGravity(true);
+
+    player.setMass(95);
+    player.setFrictionAir(0.5);
+    player.setFrictionStatic(100)
+
+    this.anims.create({
+        key: 'walk',
+        frames: this.anims.generateFrameNumbers('guy', { frames: [0, 2, 3, 5] }),
+        frameRate: 5,
+        repeat: -1
+    });
+    
+    cursors.up.on('down', () => {console.log('press'); player.play('walk')}, this);
+    cursors.up.on('up', () => {console.log('press'); player.setFrame(0); player.stop(); }, this);
+}
+
+function playerMovement() {
+    if (cursors.up.isDown && keyFPressed) {
+        player.thrust(0.2);//*0.15
+    } else if (cursors.down.isDown && keyFPressed) {
+        player.thrustBack(0.2);//*0.1
+    } else if (keyFPressed){
+        player.setVelocity(0);
+    }
+}
+
+function busMovement(this: any) {
+    // ? here we store the top right and bottom right points of our bus sprite
+    const point1: any = bus.getTopRight(); // ! green
+    const point2: any = bus.getBottomRight(); // ! red
+
+    //* 0.08
+    const turnSpeed = 0.08; // ? the speed at which the bus is turning
+
+    if (cursors.up.isDown && !keyFPressed) {
+        bus.thrust(0.15);//*0.15
+        // console.log('hi!')
+    } else if (cursors.down.isDown && !keyFPressed) {
+        bus.thrustBack(0.1);//*0.1
+    }
+
+    if (cursors.left.isDown && !keyFPressed) {
+        bus.setFrame(0); // ? one of the wheel position
+
+        if (cursors.up.isDown) { // ? the bus will turn only when the up arrow button is pressed
+            // @ts-expect-errorz
+            const angle = bus.body.angle - Math.PI / 2;
+            // @ts-expect-error
+            bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
+        } else if (cursors.down.isDown) { // ? here we correct the wheel position, so that it coresponds to the backward movement
+            // @ts-expect-error
+            const angle = bus.body.angle + Math.PI / 2;
+            // @ts-expect-error
+            bus.applyForceFrom({ x: point1.x, y: point1.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
+        }
+    } else if (cursors.right.isDown && !keyFPressed) {
+        bus.setFrame(1);
+
+        if (cursors.up.isDown) {
+            // @ts-expect-error
+            const angle = bus.body.angle + Math.PI / 2;
+            // @ts-expect-error
+            bus.applyForceFrom({ x: point2.x, y: point2.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
+        } else if (cursors.down.isDown) { // ? here we do the same things as above...
+            // @ts-expect-error
+            const angle = bus.body.angle - Math.PI / 2;
+            // @ts-expect-error
+            bus.applyForceFrom({ x: point2.x, y: point2.y }, { x: turnSpeed * Math.cos(angle), y: turnSpeed * Math.sin(angle) });
+        }
+
+    } else {
+        bus.setFrame(2) // ? frame stands for the default wheel position
+    }
+
+    if (keyF.isDown && !keyFPressed) {
+        createPlayer.call(this);
+        keyFPressed = true;
+        // console.log('wtf')
+    }
+
+    if (bus.data.values.isStationary) {
+        bus.setVelocityX(0);
+        bus.setVelocityY(0);
+        bus.setAngularVelocity(0);
+    }
 }

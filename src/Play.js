@@ -98,24 +98,69 @@ function createPlayer() {
     player.setMass(95);
     player.setFrictionAir(0.5);
     player.setFrictionStatic(100);
+    player.setData({
+        isStationary: true,
+    });
     this.anims.create({
         key: 'walk',
         frames: this.anims.generateFrameNumbers('guy', { frames: [0, 2, 3, 5] }),
         frameRate: 5,
         repeat: -1
     });
-    cursors.up.on('down', () => { console.log('press'); player.play('walk'); }, this);
-    cursors.up.on('up', () => { console.log('press'); player.setFrame(0); player.stop(); }, this);
+    this.anims.create({
+        key: 'run',
+        frames: this.anims.generateFrameNumbers('guy', { frames: [0, 1, 3, 4] }),
+        frameRate: 6,
+        repeat: -1
+    });
+    cursors.shift.on('up', () => {
+        if (cursors.up.isDown && playerIsRunning) { //? тук се спира "running" анимацията
+            player.setFrame(0);
+            player.stop();
+            player.play('walk');
+            playerIsRunning = false;
+        }
+    }, this);
 }
+let playerIsRunning = false;
 function playerMovement() {
     if (cursors.up.isDown && keyFPressed) {
-        player.thrust(0.2); //*0.15
+        if (cursors.shift.isDown) {
+            if (!playerIsRunning) {
+                player.setFrame(0);
+                player.stop();
+                player.play('run');
+                playerIsRunning = true;
+            }
+            player.thrust(0.35);
+        }
+        else {
+            player.thrust(0.2);
+        }
+        if (player.data.values.isStationary) {
+            player.play(cursors.shift.isDown ? 'run' : 'walk'); //? каква анимация да пусне в началото
+        }
+        player.data.values.isStationary = false;
     }
     else if (cursors.down.isDown && keyFPressed) {
-        player.thrustBack(0.2); //*0.1
+        player.thrustBack(0.2); //*0.15
+        if (playerIsRunning) { //? пускаме "walk" анимацията, ако преди това играчът е бягал
+            player.setFrame(0);
+            player.stop();
+            player.play('walk');
+            playerIsRunning = false;
+        }
+        if (player.data.values.isStationary) {
+            player.play('walk');
+        }
+        player.data.values.isStationary = false;
     }
-    else if (keyFPressed) {
+    else if (keyFPressed && !player.data.values.isStationary) {
         player.setVelocity(0);
+        player.setFrame(0);
+        player.stop();
+        console.log('stopped!');
+        player.data.values.isStationary = true;
     }
 }
 function busMovement() {
@@ -167,7 +212,6 @@ function busMovement() {
     if (keyF.isDown && !keyFPressed) {
         createPlayer.call(this);
         keyFPressed = true;
-        // console.log('wtf')
     }
     if (bus.data.values.isStationary) {
         bus.setVelocityX(0);

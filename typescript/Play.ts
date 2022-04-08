@@ -13,7 +13,7 @@ let keyF: Phaser.Input.Keyboard.Key;
 let keyFPressed = false;
 let player: Phaser.Physics.Matter.Sprite;
 let tempMatrix: Phaser.GameObjects.Components.TransformMatrix;
-let d: object;
+let decomposedMatrix: object;
 
 class Play extends Phaser.Scene {
 
@@ -41,6 +41,9 @@ class Play extends Phaser.Scene {
 		this.matter.world.convertTilemapLayer(layer2);
 
 		bus = this.matter.add.sprite(400, 355, 'bus_key', 2)
+
+		// bus.setExistingBody(this.matter.bodies.rectangle(bus.x, bus.y, 325, 62));
+
 		bus.setCollisionGroup(group1);
 		bus.setVelocity(0, 0);
 		bus.setIgnoreGravity(true);
@@ -56,11 +59,10 @@ class Play extends Phaser.Scene {
 		bus.setMass(170); //*90
 		bus.setDataEnabled();
 		bus.setData({
-			isStationary: false,
+			isStationary: true,
 		});
 
-
-		spawn = this.add.sprite(73, -40, 'spawn');
+		spawn = this.add.sprite(73, -51, 'spawn');
 		spawn.setOrigin(0.5, 0.5);
 		spawn.setScale(0.1, 0.1)
 		spawn.alpha = 0;
@@ -94,7 +96,7 @@ class Play extends Phaser.Scene {
 
 		// console.log(spawn.parentContainer.x)
 		spawn.getWorldTransformMatrix(tempMatrix);
-		d = tempMatrix.decomposeMatrix();
+		decomposedMatrix = tempMatrix.decomposeMatrix();
 		// console.log(d.translateX);
 	}
 
@@ -109,13 +111,12 @@ function mouseRotate(pointer: Phaser.Input.Pointer) {
 
 function createPlayer(this: any) {
 	bus.data.values.isStationary = true;
-	// bus.setToSleep();
+	bus.setToSleep();
 
 	//@ts-expect-error
-	player = this.matter.add.sprite(d.translateX, d.translateY, 'guy');
+	player = this.matter.add.sprite(decomposedMatrix.translateX, decomposedMatrix.translateY, 'guy');
 
-	const sprite_body = this.matter.bodies.rectangle(player.x, player.y, 20, 20)
-	player.setExistingBody(sprite_body);
+	player.setExistingBody(this.matter.bodies.rectangle(player.x, player.y, 70, 70));
 
 	player.setOrigin(0.5, 0.5);
 	player.setScale(0.35, 0.35);
@@ -195,7 +196,7 @@ function playerMovement() {
 		player.setVelocity(0);
 		player.setFrame(0); 
 		player.stop();
-		console.log('stopped!');
+		// console.log('stopped!');
 		player.data.values.isStationary = true;
 	}
 }
@@ -209,10 +210,10 @@ function busMovement(this: any) {
 	const turnSpeed = 0.08; // ? the speed at which the bus is turning
 
 	if (cursors.up.isDown && !keyFPressed) {
-		bus.thrust(0.15);//*0.15
+		bus.thrust(0.15); //*0.15
 		// console.log('hi!')
 	} else if (cursors.down.isDown && !keyFPressed) {
-		bus.thrustBack(0.1);//*0.1
+		bus.thrustBack(0.1); //*0.1
 	}
 
 	if (cursors.left.isDown && !keyFPressed) {
@@ -251,11 +252,5 @@ function busMovement(this: any) {
 	if (keyF.isDown && !keyFPressed) {
 		createPlayer.call(this);
 		keyFPressed = true;
-	}
-
-	if (bus.data.values.isStationary) {
-		bus.setVelocityX(0);
-		bus.setVelocityY(0);
-		bus.setAngularVelocity(0);
 	}
 }

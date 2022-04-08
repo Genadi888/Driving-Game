@@ -12,7 +12,7 @@ let keyF;
 let keyFPressed = false;
 let player;
 let tempMatrix;
-let d;
+let decomposedMatrix;
 class Play extends Phaser.Scene {
     constructor() {
         super({
@@ -34,6 +34,7 @@ class Play extends Phaser.Scene {
         layer2.setCollisionByExclusion([-1]);
         this.matter.world.convertTilemapLayer(layer2);
         bus = this.matter.add.sprite(400, 355, 'bus_key', 2);
+        // bus.setExistingBody(this.matter.bodies.rectangle(bus.x, bus.y, 325, 62));
         bus.setCollisionGroup(group1);
         bus.setVelocity(0, 0);
         bus.setIgnoreGravity(true);
@@ -48,9 +49,9 @@ class Play extends Phaser.Scene {
         bus.setMass(170); //*90
         bus.setDataEnabled();
         bus.setData({
-            isStationary: false,
+            isStationary: true,
         });
-        spawn = this.add.sprite(73, -40, 'spawn');
+        spawn = this.add.sprite(73, -51, 'spawn');
         spawn.setOrigin(0.5, 0.5);
         spawn.setScale(0.1, 0.1);
         spawn.alpha = 0;
@@ -74,7 +75,7 @@ class Play extends Phaser.Scene {
         playerMovement.call(this);
         // console.log(spawn.parentContainer.x)
         spawn.getWorldTransformMatrix(tempMatrix);
-        d = tempMatrix.decomposeMatrix();
+        decomposedMatrix = tempMatrix.decomposeMatrix();
         // console.log(d.translateX);
     }
 }
@@ -86,11 +87,10 @@ function mouseRotate(pointer) {
 }
 function createPlayer() {
     bus.data.values.isStationary = true;
-    // bus.setToSleep();
+    bus.setToSleep();
     //@ts-expect-error
-    player = this.matter.add.sprite(d.translateX, d.translateY, 'guy');
-    const sprite_body = this.matter.bodies.rectangle(player.x, player.y, 20, 20);
-    player.setExistingBody(sprite_body);
+    player = this.matter.add.sprite(decomposedMatrix.translateX, decomposedMatrix.translateY, 'guy');
+    player.setExistingBody(this.matter.bodies.rectangle(player.x, player.y, 70, 70));
     player.setOrigin(0.5, 0.5);
     player.setScale(0.35, 0.35);
     player.setRotation(bus.rotation);
@@ -159,7 +159,7 @@ function playerMovement() {
         player.setVelocity(0);
         player.setFrame(0);
         player.stop();
-        console.log('stopped!');
+        // console.log('stopped!');
         player.data.values.isStationary = true;
     }
 }
@@ -212,10 +212,5 @@ function busMovement() {
     if (keyF.isDown && !keyFPressed) {
         createPlayer.call(this);
         keyFPressed = true;
-    }
-    if (bus.data.values.isStationary) {
-        bus.setVelocityX(0);
-        bus.setVelocityY(0);
-        bus.setAngularVelocity(0);
     }
 }
